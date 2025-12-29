@@ -1,6 +1,6 @@
 ---
 title: Por que todo desenvolvedor deveria ter um blog (e como criei o meu)
-date: '2026-01-01T15:20:00-02:00'
+date: '2025-12-29T00:00:00-00:00'
 tags:
 - blog
 - thinking
