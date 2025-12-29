@@ -163,11 +163,7 @@ $RECYCLE.BIN/
 .nfs*
 
 # Editor-specific files (e.g., VSCode)
-vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/*
 
 # Vim temporary files
 [._]*.s[a-v]
