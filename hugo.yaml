@@ -1,21 +1,29 @@
 # Hugo configuration file
 title: Joao Oliveira
+baseURL: "https://joaooliveira.net"
+languageCode: pt-br
+defaultContentLanguage: pt-br
+enableRobotsTXT: true
 
 # import hextra as module
 module:
   imports:
     - path: github.com/imfing/hextra
 
+# Content Rendering & Syntax Highlighting
 markup:
-  # allow raw html
   goldmark:
     renderer:
       unsafe: true
-
-  # enable hextra syntax highlight
   highlight:
     noClasses: false
 
+# Make taxonomies explicit
+taxonomies:
+  tag: tags
+  series: series
+
+# Navigation Menu
 menu:
   main:
     - name: About
@@ -28,13 +36,16 @@ menu:
       weight: 3
       params:
         type: search
-    - name: GitHub
+    - name: Rss
       weight: 4
-      url: "https://github.com/JoaoOliveira889"
+      url: "/index.xml"
       params:
-        icon: github
+        icon: rss
 
+# Theme Parameters
 params:
+  description: "Personal website of Joao Oliveira"
+
   navbar:
     displayTitle: true
     displayLogo: false
@@ -43,18 +54,23 @@ params:
     displayCopyright: false
     displayPoweredBy: true
 
+# Blog and Sidebar settings
   blog:
     list:
       displayTags: true
   toc:
     displayTags: true
+    float: true
 
+# UI Elements
+  page:
+    width: wide
+    
   externalLinkDecoration: true
 
   highlight:
     copy:
       enable: true
-      # hover | always
       display: hover
   editURL:
     enable: true

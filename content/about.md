@@ -3,15 +3,20 @@ title: About
 type: about
 ---
 
-I’m Joao Oliveira, a Senior Software Engineer with 7 years of experience dedicated to architecting and delivering high-performance, scalable systems. While my core expertise lies in the C#/.NET ecosystem, my background as a FullStack Developer (Angular/JavaScript) allows me to maintain a comprehensive view of the entire software lifecycle.
+I’m Joao Oliveira, a Senior Software Engineer with 7 years of experience dedicated to architecting and delivering high-performance, scalable systems. My core background is in C#/.NET, and my experience as a full-stack engineer (Angular/JavaScript) helps me keep a practical end-to-end view from product needs to production operations.
 
-I specialize in System Design and building resilient architectures using Microservices, Message Brokers (Kafka, SNS, SQS), and Cloud infrastructure (AWS/Docker). I am a firm believer in the "Test-Driven" mindset, utilizing xUnit for unit/integration testing and JMeter for performance benchmarking to ensure mission-critical stability.
+I specialize in System Design and building resilient architectures using Microservices, Message Brokers (Kafka, SNS, SQS), and Cloud infrastructure (AWS/Docker). I'm a firm believer in the "Test-Driven" mindset, utilizing xUnit for unit/integration testing and JMeter for performance benchmarking to ensure mission-critical stability.
 
-Technical Strategy & Stack:
+Areas of focus
 
-- Databases & Caching: Expert knowledge in SQL (PostgreSQL, Oracle, SQL Server) and NoSQL (MongoDB), leveraging Redis for distributed caching and performance optimization.
-- DevOps & Observability: Building automated pipelines and monitoring system health through Kibana and Splunk.
-- Architecture & Design: Focused on scalability, clean code, and robust System Design patterns to support high-traffic environments.
-- Academic Background: Bachelor’s in Information Systems, Post-grad in IT Governance, and an MBA in Leadership and Innovation.
+- Data & caching: SQL (PostgreSQL, Oracle, SQL Server) and NoSQL (MongoDB); Redis for distributed caching and performance tuning.
+- DevOps & observability: CI/CD automation and operational visibility with tools such as Kibana and Splunk.
+- Architecture & design: scalability, clean code, and pragmatic design patterns for high-traffic systems.
 
-I am passionate about solving complex architectural challenges and sharing those insights through technical writing and team mentorship. I believe that technical excellence and strategic leadership are the keys to building software that doesn't just work, but scales.
+Education
+
+- Bachelor’s in Information Systems
+- Post-graduate specialization in IT Governance
+- MBA in Leadership and Innovation.
+
+I enjoy tackling complex architectural problems and sharing what I learn through technical writing and mentoring. I care about engineering quality and leadership that translates into software that is reliable today and scalable tomorrow.
