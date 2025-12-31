@@ -1,6 +1,6 @@
 ---
 title: Por que todo desenvolvedor deveria ter um blog (e como criei o meu)
-date: '2025-12-29T00:00:00-00:00'
+date: '2025-12-31T00:00:00-00:00'
 tags:
 - blog
 - thinking
@@ -32,7 +32,7 @@ Comecei a pesquisar por uma alternativa, que fosse simples e me desse controle t
 
 Sem entrar em muito detalhes do Obsidian, o que fiz foi basicamente instalar alguns plugins básicos que deixassem meu fluxo agradável, sem gerar dependência. Se o Obsidian deixar de existir amanhã, minhas notas continuam comigo e podem ser lidas em qualquer editor de texto. Tudo está offline, sincronizado entre meus dispositivos e sem dependência de nuvens proprietárias.
 
-![My Obsidian](https://joaooliveirablog.s3.us-east-1.amazonaws.com/obsidian.png)
+![My Obsidian](https://joaooliveirablog.s3.us-east-1.amazonaws.com/obsidian_082840.webp)
 
 ## Compartilhando o conhecimento: LinkedIn vs. Dev.To
 
@@ -78,6 +78,29 @@ module:
     - path: github.com/imfing/hextra
 ```
 
+Para criar o menu de navegação, após importar o hextra no hugo.yaml, adicione
+
+```yaml
+# Navigation Menu
+menu:
+  main:
+    - name: About
+      pageRef: /about
+      weight: 1
+    - name: Contact ↗
+      url: ""
+      weight: 2
+    - name: Search
+      weight: 3
+      params:
+        type: search
+    - name: Rss
+      weight: 4
+      url: "/index.xml"
+      params:
+        icon: rss
+```
+
 Criando as primeiras páginas para test
 
 ```bash
@@ -85,25 +108,37 @@ hugo new content/_index.md
 hugo new content/docs/_index.md
 ```
 
-Para visualizar localmente na porta 1313: - <http://localhost:1313>
+Para rodar o blog localmente, inicie o servidor do Hugo e acesse <http://localhost:1313>
 
 ```bash
 hugo server --buildDrafts --disableFastRender
 ```
 
-Para atualizar todos os Hugo modules no projeto para a ultima versão
+Se o comando executar sem erros, você verá o site carregado no navegador, como na imagem abaixo:
+![My Blog](https://joaooliveirablog.s3.us-east-1.amazonaws.com/hugo_080650.webp)
+
+Eu organizo os posts em `content/blog` por ano e mês (ex.: 2026/01). Assim eu consigo publicar rápido, manter o conteúdo organizado, e deixar o Hugo cuidar do index e da navegação entre as postagens.
+
+O Hextra possui uma documentação muito completa com todas as opções de configuração. Você pode consultá-la aqui: [Guia de configuração do Hextra](https://imfing.github.io/hextra/docs/guide/configuration/).
+
+Comandos extras
+Para atualizar todos os módulos do Hugo no projeto para a versão mais recente:
 
 ``` bash
 hugo mod get -u
 ```
 
-Para atualizar o Hextra theme para a ultima versão
+Para atualizar apenas o tema Hextra para a versão mais recente:
 
 ``` bash
 hugo mod get -u github.com/imfing/hextra
 ```
 
-Organizei minhas postagens na pasta blog, separadas por ano e mês (ex: 2026/01), focando em publicar primeiro e refinar o design depois..
+Opcionalmente, após atualizar, você pode garantir que o go.sum e dependências estejam consistentes:
+
+``` bash
+hugo mod tidy
+```
 
 ## Deploy descomplicado com Netlify
 
@@ -117,6 +152,8 @@ Registro CNAME  www    joaooliveira.netlify.app
 ```
 
 Em poucos segundos, o blog estava acessível em: <https://joaooliveira.net>
+
+![Blog deployed on Netlify](https://joaooliveirablog.s3.us-east-1.amazonaws.com/joaooliveirablog_073632.webp)
 
 ## Conclusão
 

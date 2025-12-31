@@ -1,0 +1,9 @@
+/* assets/css/custom.css */
+.hextra-card {
+  border-radius: 14px;
+  min-height: 62px;
+}
+
+.hextra-card:hover {
+  transform: translateY(-1px);
+}

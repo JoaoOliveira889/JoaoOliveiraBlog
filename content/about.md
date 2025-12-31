@@ -20,3 +20,15 @@ Education
 - MBA in Leadership and Innovation.
 
 I enjoy tackling complex architectural problems and sharing what I learn through technical writing and mentoring. I care about engineering quality and leadership that translates into software that is reliable today and scalable tomorrow.
+
+You can find me on these platforms:
+
+{{< cards cols="2" >}}
+  {{< card link="https://github.com/JoaoOliveira889" title="GitHub" icon="github" >}}
+
+  {{< card link="https://www.linkedin.com/in/joaooliveira889/" title="LinkedIn" icon="linkedin" >}}
+
+  {{< card link="https://www.youtube.com/@JoaoOliveiraTech" title="YouTube" icon="youtube" >}}
+
+    {{< card link="https://dev.to/joaooliveiratech" title="Dev.To" icon="devto" >}}
+{{< /cards >}}
