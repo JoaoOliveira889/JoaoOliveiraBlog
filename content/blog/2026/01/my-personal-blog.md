@@ -1,6 +1,6 @@
 ---
 title: Por que todo desenvolvedor deveria ter um blog (e como criei o meu)
-date: '2025-12-31T00:00:00-00:00'
+date: '2026-01-01T00:00:00-00:00'
 tags:
 - blog
 - thinking
@@ -158,3 +158,14 @@ Em poucos segundos, o blog estava acessível em: <https://joaooliveira.net>
 ## Conclusão
 
 Alcancei o equilíbrio que buscava: um blog pessoal com baixo esforço de manutenção e alto controle do conteúdo. O foco agora é escrever, sem me perder em customizações infinitas. O combo Hugo + Hextra + Netlify entrega simplicidade agora e flexibilidade para o futuro.
+
+## Links e Referências
+
+### Projeto
+
+* **[Repositório no GitHub](https://github.com/JoaoOliveira889/JoaoOliveiraBlog)**: Código-fonte, configurações e estrutura de pastas deste blog.
+
+### Referências Úteis
+
+* **[Meu novo blog: como eu fiz](https://akitaonrails.com/2025/09/10/meu-novo-blog-como-eu-fiz/)**: Artigo de Fabio Akita que serviu de inspiração para a escolha da *stack*.
+* **[Documentação Oficial do Hextra](https://imfing.github.io/hextra/docs/getting-started/)**: Guia completo para configuração e customização do tema utilizado.
