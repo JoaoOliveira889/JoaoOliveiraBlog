@@ -1,9 +1,9 @@
 ---
 title: Por que todo desenvolvedor deveria ter um blog (e como criei o meu)
 date: '2026-01-01T00:00:00-00:00'
+description: Mais do que um blog, um backup da mente. Saiba por que documentar seus projetos e estudos é essencial para programadores e como o exercício da escrita pode transformar sua carreira.
 tags:
 - blog
-- thinking
 - hugo
 - markdown
 - obsidian
