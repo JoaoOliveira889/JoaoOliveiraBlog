@@ -1,0 +1,23 @@
+{
+  "name": "joaooliveira",
+  "version": "1.0.0",
+  "description": "Personal blog built with **Hugo** and the **Hextra** theme.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoaoOliveira889/JoaoOliveiraBlog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JoaoOliveira889/JoaoOliveiraBlog/issues"
+  },
+  "homepage": "https://github.com/JoaoOliveira889/JoaoOliveiraBlog#readme",
+  "devDependencies": {
+    "@netlify/edge-functions": "^3.0.3"
+  }
+}

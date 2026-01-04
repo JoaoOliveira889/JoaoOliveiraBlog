@@ -1,8 +1,9 @@
 # Hugo configuration file
 title: Joao Oliveira
 baseURL: "https://joaooliveira.net"
-languageCode: pt-br
-defaultContentLanguage: pt-br
+languageCode: en-US
+defaultContentLanguage: pt-BR
+defaultContentLanguageInSubdir: false
 enableRobotsTXT: true
 
 # import hextra as module
@@ -23,10 +24,20 @@ taxonomies:
   tag: tags
   series: series
 
+# Language Configuration
+languages:
+  pt-br:
+    languageName: "🇧🇷"
+    weight: 1
+  en:
+    languageName: "🇺🇸"
+    weight: 2
+
 # Navigation Menu
 menu:
   main:
-    - name: Blog
+    - identifier: blog
+      name: Blog
       pageRef: /blog
       weight: 1
     - name: Projects
@@ -44,6 +55,16 @@ menu:
       url: "/index.xml"
       params:
         icon: rss
+    - name: Theme
+      weight: 80
+      params:
+        type: theme-toggle
+    - name: Language
+      weight: 90
+      params:
+        type: language-switch
+        label: true
+        icon: "globe-alt"
 
 # Theme Parameters
 params:
@@ -56,6 +77,10 @@ params:
   footer:
     displayCopyright: false
     displayPoweredBy: true
+
+  theme:
+    default: system
+    toggle: true
 
 # Blog and Sidebar settings
   blog:

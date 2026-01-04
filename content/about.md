@@ -3,25 +3,25 @@ title: About
 type: about
 ---
 
-I’m Joao Oliveira, a Senior Software Engineer with 7 years of experience dedicated to architecting and delivering high-performance, scalable systems. My core background is in C#/.NET, and my experience as a full-stack engineer (Angular/JavaScript) helps me keep a practical end-to-end view from product needs to production operations.
+Sou Joao Oliveira, Engenheiro de Software Sênior com 7 anos de experiência dedicados a arquitetar e entregar sistemas escaláveis, de alta performance. Minha base principal é em C#/.NET, e minha experiência como full-stack (Angular/JavaScript) me ajuda a manter uma visão prática de ponta a ponta — das necessidades do produto até a operação em produção.
 
-I specialize in System Design and building resilient architectures using Microservices, Message Brokers (Kafka, SNS, SQS), and Cloud infrastructure (AWS/Docker). I'm a firm believer in the "Test-Driven" mindset, utilizing xUnit for unit/integration testing and JMeter for performance benchmarking to ensure mission-critical stability.
+Sou especializado em System Design e em construir arquiteturas resilientes usando Microservices, Message Brokers (Kafka, SNS, SQS) e infraestrutura em Cloud (AWS/Docker). Acredito fortemente no mindset “Test-Driven”, utilizando xUnit para testes unitários/de integração e JMeter para benchmarks de performance, garantindo estabilidade em sistemas críticos.
 
-Areas of focus
+Áreas de foco
 
-- Data & caching: SQL (PostgreSQL, Oracle, SQL Server) and NoSQL (MongoDB); Redis for distributed caching and performance tuning.
-- DevOps & observability: CI/CD automation and operational visibility with tools such as Kibana and Splunk.
-- Architecture & design: scalability, clean code, and pragmatic design patterns for high-traffic systems.
+- **Dados e cache**: SQL (PostgreSQL, Oracle, SQL Server) e NoSQL (MongoDB); Redis para cache distribuído e otimização de performance.
+- **DevOps e observabilidade**: automação de CI/CD e visibilidade operacional com ferramentas como Kibana e Splunk.
+- **Arquitetura e design**: escalabilidade, clean code e padrões de design pragmáticos para sistemas de alto tráfego.
 
-Education
+Formação
 
-- Bachelor’s in Information Systems
-- Post-graduate specialization in IT Governance
-- MBA in Leadership and Innovation.
+- Bacharelado em Sistemas de Informação
+- Pós-graduação em Governança de TI
+- MBA em Liderança e Inovação
 
-I enjoy tackling complex architectural problems and sharing what I learn through technical writing and mentoring. I care about engineering quality and leadership that translates into software that is reliable today and scalable tomorrow.
+Gosto de resolver problemas arquiteturais complexos e compartilhar o que aprendo por meio de escrita técnica e mentoria. Valorizo qualidade de engenharia e liderança que se traduzem em software confiável hoje e escalável amanhã.
 
-You can find me on these platforms:
+Você pode me encontrar nestas plataformas:
 
 {{< cards cols="2" >}}
   {{< card link="https://github.com/JoaoOliveira889" title="GitHub" icon="github" >}}
