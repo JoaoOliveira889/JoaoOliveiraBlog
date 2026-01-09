@@ -11,6 +11,8 @@ tags:
 draft: false
 ---
 
+![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3ea-88ec-711c-adbb-579c12050486.webp)
+
 Quando decidi criar meu próprio blog, eu já tinha em mente que precisaria ser responsável pela hospedagem das imagens que usaria. Seria uma ótima oportunidade de aprender mais sobre o **AWS S3**, algo que já estava no meu roadmap de estudos, e trabalhar em um projeto real é, quase sempre, a melhor forma de aprender.
 
 Assim que comecei a escrever o primeiro post, criei minha conta na AWS e bucket no S3 que usaria no blog. Porém, antes de começar a explorar o mar de configurações e possíveis otimizações, eu sabia que precisava otimizar minhas imagens. Existem milhares de serviços online que fazem isso, mas onde estaria a diversão? Eu queria algo local, rápido, customizado e que não dependesse de terceiros.

@@ -10,6 +10,8 @@ tags:
 draft: false
 ---
 
+![Capa do Artigo](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3f6-edb9-7263-ba31-4d0b9cc0ff88.webp)
+
 ## Por que decidi criar meu próprio blog?
 
 Há algum tempo assisti ao [Fábio Akita](https://akitaonrails.com) falando sobre a importância de programadores criarem seus próprios blogs pessoais. Seja para compartilhar um projeto, documentar estudos ou até tentar a sorte como influenciador, no fim *doesn't matter*. O que realmente importa é o exercício da escrita. Se for sobre algo que você goste ou deseja registrar, o processo deixa de ser penoso e se torna prazeroso.

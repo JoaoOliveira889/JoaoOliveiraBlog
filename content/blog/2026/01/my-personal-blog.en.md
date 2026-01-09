@@ -11,6 +11,8 @@ draft: false
 
 ---
 
+![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3f6-edb9-7263-ba31-4d0b9cc0ff88.webp)
+
 ## Why did I decide to create my own blog?
 
 A while ago, I watched [Fábio Akita](https://akitaonrails.com) talk about the importance of programmers creating their own personal blogs. Whether it’s to share a project, document your studies, or even try your luck as an influencer, in the end it doesn’t matter. What really matters is the practice of writing. If it’s about something you enjoy or want to record, the process stops being painful and becomes enjoyable.
