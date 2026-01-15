@@ -4,6 +4,13 @@ title: "Projects"
 
 {{< cards cols="2" >}}
   {{< card
+      title="Redis Pub/Sub and Streams in .NET 10"
+      link="https://github.com/JoaoOliveira889/RedisMessageBroker"
+      subtitle="Redis Pub/Sub and Streams implementation in .NET 10, comparing real-time messaging and persistent event processing."
+      icon="github"
+  >}}
+
+  {{< card
       title="Local Image to WebP Optimizer Go"
       link="https://github.com/JoaoOliveira889/GoS3Api"
       subtitle="A Go API to manage files and buckets on Amazon S3 with concurrent uploads, streaming downloads, presigned URLs, Clean Architecture, Docker and tests."

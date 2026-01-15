@@ -1,7 +1,7 @@
 ---
-title: Construindo uma API em Go para gerenciar arquivos no Amazon S3
+title: Building an API in Go to Manage Files on Amazon S3
 date: '2026-01-09T00:00:00-00:00'
-description: Neste artigo, mostro como construí uma API em Go para gerenciar arquivos no Amazon S3, com upload concorrente, download via streaming, URLs assinadas, validações de segurança e uma arquitetura baseada em Clean Architecture. O projeto usa Docker, testes unitários e CI para garantir previsibilidade e fácil evolução.
+description: In this article, I show how I built an API in Go to manage files on Amazon S3, including concurrent uploads, streaming downloads, presigned URLs, security validations, and a Clean Architecture–based design. The project uses Docker, unit tests, and CI to ensure predictability and easy evolution.
 tags:
   - go
   - aws
@@ -13,165 +13,165 @@ tags:
 draft: false
 ---
 
-![Capa do artigo](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019bc1a3-9966-7244-a509-d8884f3584d6.webp)
+![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019bc1a3-9966-7244-a509-d8884f3584d6.webp)
 
-Quando decidi criar meu blog, escolhi o **Amazon S3** para hospedar as imagens dos posts. A decisão foi prática (S3 é confiável, barato e escala bem), mas eu também vi ali uma oportunidade: usar um problema real do dia a dia para aprofundar minha fluência no ecossistema AWS, especialmente em segurança, automação e integrações.
+When I decided to create my blog, I chose **Amazon S3** to host the images for my posts. The decision was practical (S3 is reliable, inexpensive, and scales well), but I also saw it as an opportunity: using a real, everyday problem to deepen my fluency in the AWS ecosystem, especially around security, automation, and integrations.
 
-Depois de ter criado um programa em Go que me permite **otimizar e converter para WebP**, o qual detalhei nesse [artigo](https://joaooliveira.net/blog/2026/01/imagepipe/), resolvi criar uma API também em Go, que me permite gerenciar minha conta na AWS, com isso posso fazer upload individual ou múltiplo de arquivos, gerenciamento de buckets, listagem inteligente e downloads eficientes via streaming.
+After creating a Go program that allows me to **optimize and convert images to WebP**, which I detailed in this [article](https://joaooliveira.net/blog/2026/01/imagepipe/), I decided to build an API—also in Go—that allows me to manage my AWS account. With it, I can perform single or multiple file uploads, manage buckets, perform intelligent listings, and handle efficient streaming downloads.
 
-Foi aí que surgiu esta API: uma aplicação em Go que me permite gerenciar arquivos e buckets no S3 com um fluxo pensado para produtividade, upload único ou múltiplo, listagem paginada, download via streaming e geração de URL temporária (presigned URL) para acesso seguro.
+That’s how this API came to life: a Go application that allows me to manage files and buckets in S3 with a productivity-focused workflow, supporting single and multiple uploads, paginated listings, streaming downloads, and the generation of temporary URLs (presigned URLs) for secure access.
 
-Para garantir agilidade no dia a dia, a aplicação é totalmente **containerizada com Docker**. Assim, eu subo o container e uso os endpoints (que já deixo salvos no Apidog). A cada upload, recebo instantaneamente o link final do arquivo, pronto para colar no post. Esse é o fluxo “fácil e rápido” que eu queria.
+To ensure agility in day-to-day usage, the application is fully **containerized with Docker**. This way, I spin up the container and use the endpoints (which I keep saved in Apidog). With each upload, I instantly receive the final file link, ready to paste into a blog post. This is exactly the “fast and easy” workflow I was aiming for.
 
 ![Apidog endpoints](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3c1-2215-7984-af89-ae1649c5bdb4.webp)
 
-## O que essa API faz
+## What This API Does
 
-De forma resumida, esta API cobre:
+In short, this API covers:
 
-- **Uploads** individuais e múltiplos (com concorrência).
-- **Listagem** paginada de objetos com metadados úteis.
-- **Download via streaming**, evitando carregar arquivos inteiros na memória da API.
-- **Presigned URLs** para acesso temporário e seguro a buckets privados.
-- **Gerenciamento de buckets** (criar, listar, estatísticas, esvaziar e remover).
+- **Single and multiple uploads** (with concurrency).
+- **Paginated listing** of objects with useful metadata.
+- **Streaming downloads**, avoiding loading entire files into the API’s memory.
+- **Presigned URLs** for temporary and secure access to private buckets.
+- **Bucket management** (create, list, view statistics, empty, and delete).
 
-## Arquitetura e Estrutura do Projeto
+## Architecture and Project Structure
 
-Estruturei o projeto seguindo as recomendações do [Go Standards Project Layout](https://github.com/golang-standards/project-layout). Essa organização, inspirada em **Clean Architecture**, permite que a aplicação nasça robusta, facilitando a evolução de funcionalidades e a manutenção a longo prazo.
+I structured the project following the recommendations of the [Go Standards Project Layout](https://github.com/golang-standards/project-layout). This organization, inspired by **Clean Architecture**, allows the application to start robustly while making it easier to evolve features and maintain the system over time.
 
-### Como cada parte se conecta
+### How Each Part Connects
 
-Uma forma simples de entender a arquitetura é imaginar um fluxo:
+A simple way to understand the architecture is to imagine a flow:
 
-- **Handler (HTTP)**: traduz protocolo, valida o mínimo e devolve resposta.
-- **Service**: aplica regras, validações, segurança, concorrência e timeouts.
-- **Repository (interface)**: contrato de armazenamento.
-- **S3 Repository (implementação)**: detalhes de integração com AWS SDK.
+- **Handler (HTTP)**: translates the protocol, performs minimal validation, and returns the response.
+- **Service**: applies business rules, validations, security, concurrency, and timeouts.
+- **Repository (interface)**: defines the storage contract.
+- **S3 Repository (implementation)**: handles integration details with the AWS SDK.
 
-### Estrutura de diretórios
+### Directory Structure
 
 ```plaintext
 s3-api/
 ├── .github/
-│   └── workflows/            # CI: pipelines (testes, lint, build) no GitHub Actions
+│   └── workflows/            # CI: pipelines (tests, lint, build) with GitHub Actions
 ├── cmd/
 │   └── api/
-│       └── main.go           # Bootstrap: carrega config, inicializa dependências e sobe o HTTP server
+│       └── main.go           # Bootstrap: loads config, initializes dependencies, starts the HTTP server
 ├── internal/
-│   ├── config/               # Configuração centralizada: env vars tipadas + defaults
-│   ├── middleware/           # Middlewares HTTP: logging, timeout, recovery, etc.
-│   └── upload/               # Módulo de domínio (arquivos e buckets no S3)
-│       ├── entity.go         # Entidades e DTOs de resposta (modelos do domínio)
-│       ├── errors.go         # Erros de domínio (sem acoplamento a HTTP)
-│       ├── repository.go     # Contrato (interface) de storage
-│       ├── s3_repository.go  # Implementação do contrato usando AWS SDK v2
-│       ├── service.go        # Regras de negócio: validações, concorrência, timeouts
-│       ├── handler.go        # HTTP handlers: traduz request/response e chama o Service
-│       └── service_test.go   # Testes unitários do Service (com mocks do Repository)
-├── .env                      # Config local (NUNCA versionar; usar .gitignore)
-├── Dockerfile                # Build multi-stage (binário enxuto)
-└── docker-compose.yml        # Ambiente local: sobe API com env/ports
+│   ├── config/               # Centralized configuration: typed env vars + defaults
+│   ├── middleware/           # HTTP middlewares: logging, timeout, recovery, etc.
+│   └── upload/               # Domain module (files and buckets in S3)
+│       ├── entity.go         # Domain entities and response DTOs
+│       ├── errors.go         # Domain errors (no HTTP coupling)
+│       ├── repository.go     # Storage contract (interface)
+│       ├── s3_repository.go  # Contract implementation using AWS SDK v2
+│       ├── service.go        # Business rules: validations, concurrency, timeouts
+│       ├── handler.go        # HTTP handlers: translate request/response and call the Service
+│       └── service_test.go   # Unit tests for the Service (with repository mocks)
+├── .env                      # Local config (NEVER commit; use .gitignore)
+├── Dockerfile                # Multi-stage build (slim binary)
+└── docker-compose.yml        # Local environment: runs API with env vars and ports
 ```
 
-### Decisões importantes nessa estrutura
+### Important Decisions in This Structure
 
-- `cmd/api/main.go`: Aqui aplicamos a Injeção de Dependência. O main cria o cliente da AWS, o repositório e o serviço, conectando-os. Se amanhã quisermos mudar o S3 para um banco local, mudamos apenas uma linha aqui.
-- `internal/middleware/`: Implementamos um middleware de **Logging estruturado** (usando `slog`) e um de **Timeout**, garantindo que nenhuma requisição fique pendurada infinitamente, protegendo a saúde da aplicação.
-- `internal/upload/service.go`: É aqui que usamos concorrência avançada com `errgroup`. Ao fazer uploads múltiplos, o serviço dispara várias goroutines para falar com o S3 em paralelo, reduzindo drasticamente o tempo de resposta.
-- `internal/upload/errors.go`: Em vez de retornar strings genéricas, usamos erros tipados. Isso permite que o Handler identifique se deve retornar um `400 Bad Request` ou um `404 Not Found` de forma elegante.
+- `cmd/api/main.go`: This is where Dependency Injection is applied. The `main` function creates the AWS client, the repository, and the service, wiring them together. If tomorrow we decide to replace S3 with a local database, we only need to change a single line here.
+- `internal/middleware/`: This is where we implement **structured logging** middleware (using `slog`) and a **timeout** middleware, ensuring that no request hangs indefinitely and protecting the overall health of the application.
+- `internal/upload/service.go`: This is where we use advanced concurrency with `errgroup`. When performing multiple uploads, the service launches several goroutines to communicate with S3 in parallel, drastically reducing response time.
+- `internal/upload/errors.go`: Instead of returning generic strings, we use typed errors. This allows the Handler to elegantly determine whether it should return a `400 Bad Request` or a `404 Not Found`.
 
 ### Endpoints
 
-A API foi dividida em dois grandes grupos: gerenciamento de Arquivos e de Buckets.
+The API is divided into two main groups: **File** management and **Bucket** management.
 
 #### Files
 
-| Method | Endpoint                | Description                                           |
-| ------ | ----------------------- | ----------------------------------------------------- |
-| POST   | /api/v1/upload          | Upload de 1 arquivo                                   |
-| POST   | /api/v1/upload-multiple | Upload múltiplo                                       |
-| GET    | /api/v1/list            | Listagem paginada                                     |
-| GET    | /api/v1/download        | Download via streaming                                |
-| GET    | /api/v1/presign         | Gera URL temporária (presigned)                       |
-| DELETE | /api/v1/delete          | Remove o objeto do bucket                             |
+| Method | Endpoint                | Description                                 |
+| ------ | ----------------------- | ------------------------------------------- |
+| POST   | /api/v1/upload          | Upload a single file                        |
+| POST   | /api/v1/upload-multiple | Multiple upload                             |
+| GET    | /api/v1/list            | Paginated listing                           |
+| GET    | /api/v1/download        | Streaming download                          |
+| GET    | /api/v1/presign         | Generate temporary (presigned) URL          |
+| DELETE | /api/v1/delete          | Remove an object from the bucket            |
 
 #### Buckets
 
-| Method | Endpoint               | Description                              |
-| ------ | ---------------------- | ---------------------------------------- |
-| GET    | /api/v1/buckets/list   | Lista buckets da conta                   |
-| POST   | /api/v1/buckets/create | Cria bucket                              |
-| GET    | /api/v1/buckets/stats  | Estatísticas                             |
-| DELETE | /api/v1/buckets/delete | Remove o bucket                          |
-| DELETE | /api/v1/buckets/empty  | Esvazia bucket                           |
+| Method | Endpoint               | Description                |
+| ------ | ---------------------- | -------------------------- |
+| GET    | /api/v1/buckets/list   | List account buckets       |
+| POST   | /api/v1/buckets/create | Create bucket              |
+| GET    | /api/v1/buckets/stats  | Statistics                 |
+| DELETE | /api/v1/buckets/delete | Delete bucket              |
+| DELETE | /api/v1/buckets/empty  | Empty bucket               |
 
-### Pontos de destaque e decisões técnicas
+### Key Highlights and Technical Decisions
 
-Decisões que mais impactam o uso real da API
+Decisions that have the greatest impact on real-world API usage.
 
-#### UUID v7 para nomes de arquivos
+#### UUID v7 for file names
 
-Nos uploads eu uso **UUID v7** para renomear os arquivos. Além de evitar colisões e exposição de nomes originais, o v7 preserva ordenação temporal. Isso ajuda na organização no S3, facilita auditoria e deixa o caminho aberto para evolução futura (por exemplo, indexação em banco sem perder ordenação).
+For uploads, I use **UUID v7** to rename files. In addition to avoiding collisions and preventing exposure of original names, v7 preserves temporal ordering. This helps with organization in S3, facilitates auditing, and leaves the door open for future evolution (for example, database indexing without losing order).
 
-#### Streaming para evitar picos de memória
+#### Streaming to avoid memory spikes
 
-No download, a ideia é manter o consumo de RAM estável. Em vez de “baixar tudo e depois devolver”, eu trato como um fluxo: os dados saem do S3 e vão para o cliente sem precisar virar um buffer gigante dentro da API.
+For downloads, the goal is to keep RAM usage stable. Instead of “downloading everything and then returning it,” I treat it as a stream: data flows from S3 directly to the client without becoming a large in-memory buffer inside the API.
 
-#### Validação real de tipo de arquivo (MIME)
+#### Real file type (MIME) validation
 
-Extensão é fácil de falsificar. Por isso, em vez de confiar no `.jpg`/`.png`, eu valido o conteúdo do arquivo (header) para identificar o tipo real. Isso reduz a chance de subir conteúdo malicioso disfarçado como imagem.
+File extensions are easy to spoof. For this reason, instead of trusting `.jpg`/`.png`, I validate the file content (header) to identify the actual type. This reduces the risk of uploading malicious content disguised as images.
 
-#### Timeouts como proteção de recursos
+#### Timeouts as resource protection
 
-Como a API depende de serviços externos (S3), eu não quero requisições “penduradas”. Timeouts impedem consumo excessivo de goroutines e conexões quando a rede está ruim ou quando há lentidão do provedor.
+Since the API depends on external services (S3), I do not want requests to hang indefinitely. Timeouts prevent excessive consumption of goroutines and connections when the network is unstable or the provider is slow.
 
-## Inicializando o projeto
+## Initializing the Project
 
-O primeiro passo é preparar o ambiente de desenvolvimento. O Go utiliza o sistema de módulos (`go mod`) para gerenciar dependências, o que garante que o projeto seja reprodutível em qualquer máquina.
+The first step is to prepare the development environment. Go uses the module system (`go mod`) to manage dependencies, ensuring that the project is reproducible on any machine.
 
 ```bash
-# Criação da pasta raiz e entrada no diretório
+# Create the root folder and enter the directory
 mkdir s3-api && cd s3-api
 
-# Inicialização do módulo (substitua pelo seu repositório se necessário)
+# Initialize the module (replace with your repository if needed)
 go mod init github.com/JoaoOliveira889/s3-api
 
-# Criação da árvore de diretórios seguindo o Go Standard Layout
+# Create the directory tree following the Go Standard Project Layout
 mkdir -p cmd/api internal/upload internal/config internal/middleware
 ```
 
-### Gerenciamento de Dependências
+### Dependency Management
 
-Eu uso o **AWS SDK for Go v2** e algumas bibliotecas para dar robustez ao projeto (roteamento HTTP, carregamento de env, UUID, testes). A ideia é manter um conjunto enxuto e bem justificado, evitando dependências desnecessárias.
+I use the **AWS SDK for Go v2** and a few libraries to make the project more robust (HTTP routing, env loading, UUIDs, testing). The goal is to keep the dependency set lean and well-justified, avoiding anything unnecessary.
 
 ```bash
-# Core do SDK e gerenciamento de configurações/credenciais
+# SDK core and configuration/credentials management
 go get github.com/aws/aws-sdk-go-v2
 go get github.com/aws/aws-sdk-go-v2/config
 
-# Serviço específico do S3
+# S3 service client
 go get github.com/aws/aws-sdk-go-v2/service/s3
 
-# Gin Gonic: Framework HTTP de alta performance
+# Gin Gonic: high-performance HTTP framework
 go get github.com/gin-gonic/gin
 
-# GoDotEnv: Para carregar variáveis de ambiente do arquivo .env
+# GoDotEnv: load environment variables from a .env file
 go get github.com/joho/godotenv
 
-# UUID: Para geração de identificadores únicos v7
+# UUID: generate unique identifiers (v7)
 go get github.com/google/uuid
 
-# Testify: Para facilitar a criação de asserções e mocks nos testes
+# Testify: assertions and mocks for tests
 go get github.com/stretchr/testify
 ```
 
-## Camada de Domínio
+## Domain Layer
 
-Aqui entram as **entidades** e os **contratos**. O ponto central é: o domínio descreve o que o sistema faz, sem acoplamento ao S3 em si.
+This is where the **entities** and **contracts** live. The core idea is: the domain describes what the system does, without being coupled to S3 itself.
 
-### Entidades
+### Entities
 
-As entidades representam os dados principais da aplicação: arquivos, metadados para listagem, estatísticas de bucket e paginação.
+Entities represent the main data structures of the application: files, listing metadata, bucket statistics, and pagination.
 
 ```go
 package upload
@@ -182,15 +182,15 @@ import (
 )
 
 type File struct {
-	Name        string            `json:"name"`//nome final do objeto no storage
-	URL         string            `json:"url"`//URL resultante após upload
-	Content     io.ReadSeekCloser `json:"-"`//Content não é serializado em JSON porque representa o stream do arquivo
+	Name        string            `json:"name"`         // final object name in storage
+	URL         string            `json:"url"`          // resulting URL after upload
+	Content     io.ReadSeekCloser `json:"-"`            // Content is not serialized to JSON because it represents the file stream
 	Size        int64             `json:"size"`
 	ContentType string            `json:"content_type"`
 }
 
 type FileSummary struct {
-	Key               string    `json:"key"`//chave completa do objeto no S3
+	Key               string    `json:"key"`            // full object key in S3
 	URL               string    `json:"url"`
 	Size              int64     `json:"size_bytes"`
 	HumanReadableSize string    `json:"size_formatted"`
@@ -213,15 +213,15 @@ type BucketSummary struct {
 
 type PaginatedFiles struct {
 	Files     []FileSummary `json:"files"`
-	NextToken string        `json:"next_token,omitempty"`//token de continuação (pagination token)
+	NextToken string        `json:"next_token,omitempty"` // continuation token (pagination token)
 }
 ```
 
-### Interface do Repositório
+### Repository Interface
 
-O repositório define um **contrato** de armazenamento. Assim, o Service não “sabe” que é S3. Ele só sabe que existe uma implementação capaz de armazenar, listar, baixar e deletar.
+The repository defines a storage **contract**. This way, the Service layer does not “know” it is S3. It only knows that there is an implementation capable of storing, listing, downloading, and deleting.
 
-> Nota: ao trabalhar com stream no upload/download, a API evita carregar arquivos inteiros em memória, mantendo o consumo de RAM muito mais previsível.
+> Note: by using streaming for uploads/downloads, the API avoids loading entire files into memory, keeping RAM usage much more predictable.
 
 ```go
 package upload
@@ -232,46 +232,46 @@ import (
 	"time"
 )
 
-// Repository define o contrato de storage.
+// Repository defines the storage contract.
 type Repository interface {
-	// Upload armazena o arquivo no bucket e retorna a URL final do objeto.
+	// Upload stores the file in the bucket and returns the final object URL.
 	Upload(ctx context.Context, bucket string, file *File) (string, error)
 
-	// GetPresignURL gera uma URL temporária para download seguro
+	// GetPresignURL generates a temporary URL for secure downloads.
 	GetPresignURL(ctx context.Context, bucket, key string, expiration time.Duration) (string, error)
 
-	// Download retorna um stream (io.ReadCloser) para permitir streaming sem carregar tudo em memória.
+	// Download returns a stream (io.ReadCloser) to enable streaming without loading everything into memory.
 	Download(ctx context.Context, bucket, key string) (io.ReadCloser, error)
 
-	// List retorna uma página de arquivos usando token de continuação.
+	// List returns a page of files using a continuation token.
 	List(ctx context.Context, bucket, prefix, token string, limit int32) (*PaginatedFiles, error)
 
-	// Delete remove um objeto específico do bucket.
+	// Delete removes a specific object from the bucket.
 	Delete(ctx context.Context, bucket string, key string) error
 
-	// CheckBucketExists verifica se o bucket existe e está acessível.
+	// CheckBucketExists verifies whether the bucket exists and is accessible.
 	CheckBucketExists(ctx context.Context, bucket string) (bool, error)
 
-	// CreateBucket cria um bucket (geralmente com validações prévias na camada de Service).
+	// CreateBucket creates a bucket (usually with prior validations in the Service layer).
 	CreateBucket(ctx context.Context, bucket string) error
 
-	// ListBuckets lista todos os buckets disponíveis na conta.
+	// ListBuckets lists all buckets available in the account.
 	ListBuckets(ctx context.Context) ([]BucketSummary, error)
 
-	// GetStats agrega estatísticas do bucket
+	// GetStats aggregates bucket statistics.
 	GetStats(ctx context.Context, bucket string) (*BucketStats, error)
 
-	// DeleteAll remove todos os objetos do bucket
+	// DeleteAll removes all objects from the bucket.
 	DeleteAll(ctx context.Context, bucket string) error
 
-	// DeleteBucket remove o bucket
+	// DeleteBucket deletes the bucket.
 	DeleteBucket(ctx context.Context, bucket string) error
 }
 ```
 
-### Camada de Infraestrutura
+### Infrastructure Layer
 
-Com o contrato definido, eu crio a implementação concreta para falar com a AWS. Aqui o objetivo é traduzir as necessidades do domínio para chamadas do AWS SDK v2.
+With the contract defined, I can create the concrete implementation that talks to AWS. The goal here is to translate the domain’s needs into calls to the AWS SDK v2.
 
 ```go
 package upload
@@ -305,15 +305,15 @@ func (r *S3Repository) Upload(ctx context.Context, bucket string, file *File) (s
 	input := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(file.Name),
-		Body:   file.Content, //stream: evita carregar o arquivo inteiro em memória
+		Body:   file.Content, // stream: avoids loading the whole file into memory
 	}
 
 	_, err := r.client.PutObject(ctx, input)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload: %w", err)
 	}
-	
-	// URL direta
+
+	// Direct URL
 	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", bucket, r.region, file.Name), nil
 }
 
@@ -325,7 +325,7 @@ func (r *S3Repository) List(ctx context.Context, bucket, prefix, token string, l
 		MaxKeys:           aws.Int32(limit),
 	}
 
-	// No SDK, token vazio deve ser nil para evitar request com token inválido.
+	// In the SDK, an empty token must be nil to avoid sending an invalid token.
 	if token == "" {
 		input.ContinuationToken = nil
 	}
@@ -374,13 +374,13 @@ func (r *S3Repository) Download(ctx context.Context, bucket, key string) (io.Rea
 	if err != nil {
 		return nil, err
 	}
-	
-	// Retorna o Body como stream para o Handler fazer io.Copy direto na resposta.
+
+	// Return Body as a stream so the handler can io.Copy directly to the response.
 	return output.Body, nil
 }
 
 func (r *S3Repository) GetPresignURL(ctx context.Context, bucket, key string, exp time.Duration) (string, error) {
-	// Presign client gera URLs temporárias sem precisar tornar o objeto público.
+	// The presign client generates temporary URLs without making the object public.
 	pc := s3.NewPresignClient(r.client)
 	req, err := pc.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
@@ -412,7 +412,10 @@ func (r *S3Repository) ListBuckets(ctx context.Context) ([]BucketSummary, error)
 	}
 	var res []BucketSummary
 	for _, b := range out.Buckets {
-		res = append(res, BucketSummary{Name: aws.ToString(b.Name), CreationDate: aws.ToTime(b.CreationDate)})
+		res = append(res, BucketSummary{
+			Name:         aws.ToString(b.Name),
+			CreationDate: aws.ToTime(b.CreationDate),
+		})
 	}
 	return res, nil
 }
@@ -427,7 +430,7 @@ func (r *S3Repository) DeleteAll(ctx context.Context, bucket string) error {
 	if err != nil || len(out.Contents) == 0 {
 		return err
 	}
-	
+
 	var objects []types.ObjectIdentifier
 	for _, obj := range out.Contents {
 		objects = append(objects, types.ObjectIdentifier{Key: obj.Key})
@@ -470,18 +473,18 @@ func formatBytes(b int64) string {
 }
 ```
 
-### Destaques técnicos na Infraestrutura
+### Technical Highlights in the Infrastructure Layer
 
-- **Contexto (`context.Context`)**: operações de rede respeitam cancelamento e timeout; se a requisição cair, eu evito trabalho inútil e consumo de recursos.
-- **Paginação eficiente**: essencial para buckets grandes; o cliente navega sem sobrecarregar a API.
-- **Presigned URLs**: acesso temporário e seguro a bucket privado sem expor o bucket publicamente.
-- **Apresentação de dados**: formatar tamanhos e metadados melhora muito a experiência de quem consome a API.
+- **Context (`context.Context`)**: network operations respect cancellation and timeouts; if the request is dropped, unnecessary work and resource consumption are avoided.
+- **Efficient pagination**: essential for large buckets; clients can navigate results without overloading the API.
+- **Presigned URLs**: temporary and secure access to private buckets without exposing them publicly.
+- **Data presentation**: formatting sizes and metadata significantly improves the experience for API consumers.
 
-### Camada de Serviço
+### Service Layer
 
-Nesta camada fica a orquestração: validações, regras de negócio, timeouts e concorrência.
+This layer is responsible for orchestration: validations, business rules, timeouts, and concurrency.
 
-Um detalhe que eu gosto aqui: a interface `Service` expõe o “o que a aplicação faz”, enquanto a implementação concreta fica privada, forçando o uso de um construtor (factory). Isso ajuda a manter o design consistente e controlado.
+One detail I particularly like here: the `Service` interface exposes *what the application does*, while the concrete implementation remains private, enforcing the use of a constructor (factory). This helps keep the design consistent and controlled.
 
 ```go
 package upload
@@ -523,11 +526,11 @@ const (
 )
 
 var (
-	// S3 bucket names seguem regras de DNS (min/max e charset). Regex cobre o padrão geral.
+	// S3 bucket names follow DNS rules (min/max length and charset). The regex covers the general pattern.
 	bucketDNSNameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$`)
-	
-	// Allowlist: valida tipo real do arquivo (MIME detectado) em vez de confiar na extensão.
-	allowedTypes       = map[string]bool{
+
+	// Allowlist: validates the actual file type (detected MIME) instead of trusting the extension.
+	allowedTypes = map[string]bool{
 		"image/jpeg":      true,
 		"image/png":       true,
 		"image/webp":      true,
@@ -544,7 +547,7 @@ func NewService(repo Repository) Service {
 }
 
 func (s *uploadService) UploadFile(ctx context.Context, bucket string, file *File) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, uploadTimeout)// evita requisição "pendurada" em chamadas ao S3
+	ctx, cancel := context.WithTimeout(ctx, uploadTimeout) // prevents "hanging" requests in S3 calls
 	defer cancel()
 
 	if err := s.validateBucketName(bucket); err != nil {
@@ -556,7 +559,7 @@ func (s *uploadService) UploadFile(ctx context.Context, bucket string, file *Fil
 		return "", err
 	}
 
-	// UUID v7 mantém ordenação temporal e evita colisão/exposição de nomes originais.
+	// UUID v7 preserves temporal ordering and avoids collisions/exposure of original names.
 	id, err := uuid.NewV7()
 	if err != nil {
 		slog.Error("uuid generation failed", "error", err)
@@ -577,12 +580,12 @@ func (s *uploadService) UploadFile(ctx context.Context, bucket string, file *Fil
 }
 
 func (s *uploadService) UploadMultipleFiles(ctx context.Context, bucket string, files []*File) ([]string, error) {
-	// errgroup cancela o contexto se qualquer goroutine falhar.
+	// errgroup cancels the context if any goroutine fails.
 	g, ctx := errgroup.WithContext(ctx)
 	results := make([]string, len(files))
 
 	for i, f := range files {
-		i, f := i, f // evita captura incorreta das variáveis do loop
+		i, f := i, f // avoids incorrect capture of loop variables
 		g.Go(func() error {
 			url, err := s.UploadFile(ctx, bucket, f)
 			if err != nil {
@@ -605,7 +608,7 @@ func (s *uploadService) GetDownloadURL(ctx context.Context, bucket, key string) 
 		return "", err
 	}
 
-	// Presign é a forma recomendada para acesso temporário a buckets privados.
+	// Presign is the recommended way to provide temporary access to private buckets.
 	return s.repo.GetPresignURL(ctx, bucket, key, 15*time.Minute)
 }
 
@@ -674,7 +677,6 @@ func (s *uploadService) GetBucketStats(ctx context.Context, bucket string) (*Buc
 }
 
 func (s *uploadService) CreateBucket(ctx context.Context, bucket string) error {
-
 	if err := s.validateBucketName(bucket); err != nil {
 		return err
 	}
@@ -741,7 +743,7 @@ func (s *uploadService) validateFile(f *File) error {
 		return fmt.Errorf("failed to read file header: %w", err)
 	}
 
-	// Reposiciona o stream para o início antes do upload.
+	// Reset the stream back to the beginning before upload.
 	if _, err := seeker.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("failed to reset file pointer: %w", err)
 	}
@@ -756,29 +758,29 @@ func (s *uploadService) validateFile(f *File) error {
 }
 ```
 
-### Destaques técnicos no Serviço
+### Technical Highlights in the Service Layer
 
-#### Concorrência com errgroup
+#### Concurrency with errgroup
 
-No upload múltiplo, eu não subo arquivo por arquivo. Eu disparo uploads em paralelo e deixo o `errgroup` gerenciar cancelamento: se um upload falhar, os demais são sinalizados para parar. Na prática, o tempo total tende a ser próximo do upload mais lento, e não a soma de todos.
+In multiple uploads, I don’t upload files one by one. I trigger uploads in parallel and let `errgroup` manage cancellation: if one upload fails, the others are signaled to stop. In practice, the total time tends to be close to the slowest upload, rather than the sum of all uploads.
 
-#### Segurança: validação de tipo de arquivo
+#### Security: file type validation
 
-A validação lê um trecho do conteúdo para identificar o tipo real do arquivo, reduzindo risco de arquivos maliciosos com extensão “fingida”.
+The validation reads a portion of the content to identify the actual file type, reducing the risk of malicious files with a “spoofed” extension.
 
-#### Resiliência: timeouts por operação
+#### Resilience: per-operation timeouts
 
-Operações como upload e delete têm características diferentes; por isso, faz sentido ter tempos limites distintos para manter a API responsiva e evitar recursos travados.
+Operations such as upload and delete have different characteristics; therefore, it makes sense to define distinct time limits to keep the API responsive and avoid stuck resources.
 
-#### Encapsulamento e injeção de dependência
+#### Encapsulation and dependency injection
 
-O Service depende de um `Repository`. Isso torna o código altamente testável: em testes, eu simulo o repositório com mocks sem precisar de AWS.
+The Service depends on a `Repository`. This makes the code highly testable: in tests, I can mock the repository without needing AWS.
 
-### Camada de Handler
+### Handler Layer
 
-O Handler traduz HTTP para o mundo da aplicação: extrai parâmetros, valida o mínimo, chama o Service e retorna JSON (ou streaming no caso de download).
+The Handler translates HTTP into the application domain: it extracts parameters, performs minimal validation, calls the Service, and returns JSON (or streaming in the case of downloads).
 
-Eu utilizei o **Gin** pela combinação de performance, simplicidade e ecossistema de middlewares.
+I chose **Gin** for its combination of performance, simplicity, and a rich middleware ecosystem.
 
 ```go
 package upload
@@ -813,11 +815,11 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open file"})
 		return
 	}
-	defer openedFile.Close()// garante que o stream do multipart seja fechado
+	defer openedFile.Close()
 
 	file := &File{
 		Name:        fileHeader.Filename,
-		Content:     openedFile,// stream: evita carregar o arquivo inteiro em memória
+		Content:     openedFile,
 		Size:        fileHeader.Size,
 		ContentType: fileHeader.Header.Get("Content-Type"),
 	}
@@ -860,7 +862,6 @@ func (h *Handler) UploadMultiple(c *gin.Context) {
 		})
 	}
 
-	// Fecha todos os streams abertos (mesmo em caso de erro no Service).
 	defer func() {
 		for _, f := range filesToUpload {
 			f.Content.Close()
@@ -900,7 +901,6 @@ func (h *Handler) DownloadFile(c *gin.Context) {
 	}
 	defer stream.Close()
 
-	// Streaming: os bytes fluem do S3 para o cliente sem serem carregados em RAM pela API.
 	c.Header("Content-Disposition", "attachment; filename="+key)
 	c.Header("Content-Type", "application/octet-stream")
 
@@ -1004,7 +1004,6 @@ func (h *Handler) EmptyBucket(c *gin.Context) {
 }
 
 func (h *Handler) handleError(c *gin.Context, err error) {
-	// Mapeia erros semânticos (domínio) para status HTTP.
 	switch {
 	case errors.Is(err, ErrInvalidFileType),
 		errors.Is(err, ErrBucketNameRequired):
@@ -1025,16 +1024,17 @@ func (h *Handler) handleError(c *gin.Context, err error) {
 }
 ```
 
-### Decisões técnicas no handler
+### Technical Decisions in the Handler
 
-1. **Multipart/form-data sem “estourar RAM”**: eu abro o arquivo como stream, evitando carregar tudo em memória.
-2. **Streaming de download**: crio um “cano” entre o S3 e o cliente. Isso permite suportar arquivos maiores com hardware modesto.
-3. **Tratamento centralizado de erros**: em vez de espalhar `if err != nil` por todas as rotas, o Handler mapeia erros semânticos do domínio para códigos HTTP consistentes (400, 404, 409, 504 etc.).
-### O ponto de entrada (main)
+1. **Multipart/form-data without “blowing up RAM”**: I open the file as a stream, avoiding loading the entire content into memory.
+2. **Download streaming**: I create a “pipe” between S3 and the client. This makes it possible to support larger files with modest hardware.
+3. **Centralized error handling**: instead of scattering `if err != nil` across all routes, the Handler maps semantic domain errors to consistent HTTP status codes (400, 404, 409, 504, etc.).
 
-O `main` carrega configurações, instancia dependências e sobe o servidor. Aqui entra um dos conceitos mais úteis para manter projetos saudáveis: **injeção de dependência**.
+### The Entry Point (main)
 
-Em termos práticos: o main cria o cliente AWS → passa para o repositório → passa para o service → passa para o handler. Isso deixa o sistema modular e fácil de testar.
+The `main` function loads configuration, instantiates dependencies, and starts the server. This is where one of the most useful concepts for keeping projects healthy comes into play: **dependency injection**.
+
+In practical terms: `main` creates the AWS client → passes it to the repository → passes it to the service → passes it to the handler. This keeps the system modular and easy to test.
 
 ```go
 package main
@@ -1058,20 +1058,18 @@ import (
 )
 
 func main() {
-	_ = godotenv.Load()// .env é útil em dev; em produção, prefira variáveis do ambiente/IAM Roles
+	_ = godotenv.Load()
 
 	cfg := appConfig.Load()
 
-	// Logs em JSON facilitam busca/indexação em ferramentas como CloudWatch/ELK/Loki.
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
 	r := gin.New()
 
-	// Middlewares globais: aplicados a todas as rotas.
 	r.Use(middleware.RequestTimeoutMiddleware(cfg.UploadTimeout))
 	r.Use(middleware.LoggingMiddleware())
-	r.Use(gin.Recovery())// evita que um panic derrube o servidor inteiro
+	r.Use(gin.Recovery())
 
 	ctx := context.Background()
 	awsCfg, err := configAWS.LoadDefaultConfig(ctx, configAWS.WithRegion(cfg.AWSRegion))
@@ -1080,7 +1078,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Injeção de dependência (bootstrap): client -> repo -> service -> handler.
 	s3Client := s3.NewFromConfig(awsCfg)
 	repo := upload.NewS3Repository(s3Client, cfg.AWSRegion)
 	service := upload.NewService(repo)
@@ -1126,22 +1123,22 @@ func main() {
 }
 ```
 
-### Destaques técnicos na `main`
+### Technical Highlights in `main`
 
-- **Logging estruturado**: logs em JSON são mais úteis para indexação e busca em ferramentas como CloudWatch, ELK ou Datadog.
-- **Middlewares em cadeia**: aplico log e timeout globalmente, garantindo consistência em todas as rotas.
-- **Recovery**: evita que um `panic` derrube a API inteira.
-- **Agrupamento e versionamento**: `/api/v1` facilita evolução sem quebrar clientes antigos.
+- **Structured logging**: JSON logs are more useful for indexing and searching in tools such as CloudWatch, ELK, or Datadog.
+- **Chained middlewares**: logging and global timeouts are applied consistently across all routes.
+- **Recovery**: prevents a `panic` from bringing down the entire API.
+- **Grouping and versioning**: `/api/v1` makes it easier to evolve the API without breaking existing clients.
 
-## Segurança e configuração: gerenciando credenciais
+## Security and configuration: managing credentials
 
-Para a API falar com a AWS, ela precisa de credenciais. Mas expor chaves no código é um risco sério. Por isso, em desenvolvimento local eu uso variáveis de ambiente (via `.env`) e, em produção, a evolução natural é usar **IAM Roles**.
+For the API to communicate with AWS, it needs credentials. However, exposing keys in the code is a serious risk. For this reason, in local development I use environment variables (via `.env`), and in production the natural evolution is to use **IAM Roles**.
 
-### Arquivo `.env` (desenvolvimento local)
+### `.env` file (local development)
 
-Na raiz do projeto, criamos o arquivo .env. Ele servirá para armazenar configurações de servidor e as chaves secretas da AWS.
+At the root of the project, we create the `.env` file. It is used to store server configuration and AWS secret keys.
 
-> Atenção: Este arquivo deve estar obrigatoriamente no seu .gitignore. Nunca envie suas chaves para o GitHub ou qualquer outro sistema de controle de versão.
+> Warning: This file must be included in your `.gitignore`. Never commit your keys to GitHub or any other version control system.
 
 ```plaintext
 # Server Settings
@@ -1157,29 +1154,29 @@ AWS_SECRET_ACCESS_KEY=SUA_SECRET_KEY_AQUI
 UPLOAD_TIMEOUT_SECONDS=60
 ```
 
-### Obtendo Credenciais no Console AWS (IAM)
+### Obtaining Credentials in the AWS Console (IAM)
 
-As chaves (Access Keys) são geradas no IAM. Para estudos você pode usar permissões amplas, mas o ideal é seguir o **princípio do menor privilégio** e restringir ao bucket e ações necessárias.
+Access keys are generated in IAM. For study purposes, you can use broad permissions, but the recommended approach is to follow the **principle of least privilege** and restrict access to only the required bucket and actions.
 
-Passo a Passo:
+Step by step:
 
-1. Acesse o IAM: No console da AWS, busque por "IAM".
-2. Crie um Usuário: Vá em Users > Create user.
-3. Configuração: Defina um nome (ex: s3-api-manager). Não é necessário habilitar o acesso ao Console Visual (AWS Management Console) para este usuário, pois ele será usado apenas via código.
-4. Permissões (Princípio do Menor Privilégio): Escolha Attach policies directly.
-	- Nota: Para fins de estudo, você pode selecionar AmazonS3FullAccess. Em um cenário de produção real, o ideal é criar uma política personalizada que dê acesso apenas ao bucket específico que você irá usar.
-5. Gerar as Chaves: Após criar o usuário, clique no nome dele, vá na aba Security credentials e procure pela seção Access keys.
-6. Criação: Clique em Create access key, selecione a opção "Local code" e avance.
+1. Access IAM: In the AWS Console, search for “IAM”.
+2. Create a User: Go to Users > Create user.
+3. Configuration: Define a name (e.g., `s3-api-manager`). It is not necessary to enable access to the AWS Management Console for this user, as it will be used only via code.
+4. Permissions (Principle of Least Privilege): Choose Attach policies directly.
+   - Note: For learning purposes, you may select AmazonS3FullAccess. In a real production scenario, the ideal approach is to create a custom policy that grants access only to the specific bucket you intend to use.
+5. Generate the Keys: After creating the user, click on the user name, go to the Security credentials tab, and look for the Access keys section.
+6. Creation: Click Create access key, select the “Local code” option, and proceed.
 
-> IMPORTANTE: Você verá a Access Key ID e a Secret Access Key. Copie e cole no seu .env agora, pois a Secret Key nunca mais será exibida.
+> IMPORTANT: You will see the Access Key ID and the Secret Access Key. Copy and paste them into your `.env` file immediately, as the Secret Key will never be shown again.
 
-## Middlewares: observabilidade e resiliência
+## Middlewares: observability and resilience
 
-Middlewares são o lugar certo para comportamentos globais: logs, timeouts, correlação e proteção. Em vez de replicar isso por endpoint, eu centralizo.
+Middlewares are the right place for global behaviors: logging, timeouts, correlation, and protection. Instead of replicating these concerns per endpoint, I centralize them.
 
-### Logging estruturado
+### Structured logging
 
-O log é escrito após a requisição terminar. Isso permite registrar status code e latência com precisão, facilitando análise de performance e erros.
+The log is written after the request finishes. This makes it possible to accurately record the status code and latency, making performance and error analysis much easier.
 
 ```go
 package middleware
@@ -1197,7 +1194,7 @@ func LoggingMiddleware() gin.HandlerFunc {
 		path := c.Request.URL.Path
 		raw := c.Request.URL.RawQuery
 
-		c.Next()// executa o handler antes de logar, permitindo capturar status e latência reais
+		c.Next()
 
 		if raw != "" {
 			path = path + "?" + raw
@@ -1215,9 +1212,9 @@ func LoggingMiddleware() gin.HandlerFunc {
 }
 ```
 
-### Controle de timeout
+### Timeout control
 
-Em sistemas que dependem de serviços externos, é perigoso deixar conexões abertas indefinidamente. O middleware de timeout cancela a requisição quando ela excede um limite, liberando recursos.
+In systems that depend on external services, leaving connections open indefinitely is risky. The timeout middleware cancels the request when it exceeds a defined limit, freeing up resources.
 
 ```go
 package middleware
@@ -1232,7 +1229,6 @@ import (
 
 func RequestTimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-	// Propaga um contexto com deadline para toda a cadeia (handlers + chamadas ao S3).
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer cancel()
 
@@ -1249,7 +1245,6 @@ func RequestTimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 		case <-finished:
 			return
 		case <-ctx.Done():
-		// Se estourar o deadline, aborta a request e devolve 504.
 			if ctx.Err() == context.DeadlineExceeded {
 				c.AbortWithStatusJSON(http.StatusGatewayTimeout, gin.H{
 					"error": "request timed out",
@@ -1260,17 +1255,17 @@ func RequestTimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 }
 ```
 
-### Destaques técnicos Middlewares
+### Technical Highlights in Middlewares
 
-- **`c.Next()` no momento certo**: garante que o log capture status e latência reais.
-- **`select` e canais**: padrão claro para observar “terminou vs expirou”, mantendo o controle do ciclo de vida da requisição.
-- **Logs estruturados**: tornam mais fácil construir dashboards e alarmes.
+- **`c.Next()` at the right moment**: ensures that logs capture the actual status code and real latency.
+- **`select` and channels**: a clear pattern to observe “completed vs. timed out,” maintaining control over the request lifecycle.
+- **Structured logs**: make it easier to build dashboards and alerts.
 
-## Testes Unitários
+## Unit Tests
 
-Um dos maiores benefícios dessa arquitetura é a capacidade de testar a lógica de negócio isoladamente, sem AWS e sem internet.
+One of the greatest benefits of this architecture is the ability to test business logic in isolation, without AWS and without an internet connection.
 
-Eu uso **mocks** para simular o repositório e foco em validar: regras de bucket, validações de tipo de arquivo, geração de identificadores e tratamento de erros.
+I use **mocks** to simulate the repository and focus on validating: bucket rules, file type validations, identifier generation, and error handling.
 
 ```go
 package upload
@@ -1342,9 +1337,9 @@ func (m *RepositoryMock) CreateBucket(ctx context.Context, bucket string) error 
 
 ```
 
-### Implementando os Testes do Serviço
+### Implementing Service Tests
 
-No arquivo service_test.go, focamos em testar as regras de negócio: validação de nomes de bucket, geração de UUID e tratamento de erros.
+In the `service_test.go` file, we focus on testing business rules: bucket name validation, UUID generation, and error handling.
 
 ```go
 package upload
@@ -1422,20 +1417,21 @@ func TestGetDownloadURL_Success(t *testing.T) {
 }
 ```
 
-![Testes rodando no terminal](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3cb-45f0-76a1-8f3b-e2569308f4b3.webp)
+![Tests running on terminal](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3cb-45f0-76a1-8f3b-e2569308f4b3.webp)
 
-### Destaques técnicos nos testes
+## Technical Highlights in Tests
 
-- **Testar regra, não integração**: o Service precisa ser previsível; integrações ficam para testes específicos.
-- **Validação de segurança refletida nos testes**: se a API valida MIME, os testes precisam respeitar isso para serem realistas.
-- **`errors.Is` e erros semânticos**: isso fortalece consistência e facilita assertivas.
-## Automação com GitHub Actions
+- **Test the rule, not the integration**: the Service must be predictable; integrations are left for dedicated tests.
+- **Security validation reflected in tests**: if the API validates MIME types, the tests must respect this to remain realistic.
+- **`errors.Is` and semantic errors**: this strengthens consistency and makes assertions easier and clearer.
 
-A cada push/PR, o CI instala dependências e roda testes. Isso mantém a branch principal estável e reduz o risco de regressão.
+## Automation with GitHub Actions
 
-### Configurando o Workflow (go.yml)
+On every push or pull request, the CI installs dependencies and runs tests. This keeps the main branch stable and reduces the risk of regressions.
 
-O arquivo de configuração deve ser criado em .github/workflows/go.yml. Ele define os passos necessários para validar a saúde do projeto.
+### Configuring the Workflow (`go.yml`)
+
+The configuration file should be created at `.github/workflows/go.yml`. It defines the steps required to validate the health of the project.
 
 ```yml
 # .github/workflows/go.yml
@@ -1472,18 +1468,19 @@ jobs:
         run: go test -v -race ./...
 ```
 
-![tests rodando no github](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3cc-5002-77a7-8f58-4c3237752e4e.webp)
+![tests running on github](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3cc-5002-77a7-8f58-4c3237752e4e.webp)
 
-### Destaques técnicos na Automação
+### Technical Highlights in Automation
 
-- **Race detector (`-race`)**: importante porque há concorrência (uploads paralelos).
-- **Cache de dependências**: acelera builds e economiza tempo de execução.
-- **Pipeline seguro**: como o Service é testado com mocks, o CI não precisa de credenciais AWS.
-## Configurações Centralizadas
+- **Race detector (`-race`)**: important because there is concurrency (parallel uploads).
+- **Dependency caching**: speeds up builds and reduces execution time.
+- **Secure pipeline**: since the Service is tested with mocks, the CI does not require AWS credentials.
 
-Em projetos pequenos, é comum espalhar `os.Getenv`. Em projetos que crescem, isso vira dívida técnica: dependências ficam implícitas e difíceis de rastrear.
+## Centralized Configuration
 
-Centralizar config cria uma “fonte única da verdade”: validação e tipagem no início da execução e consumo simples no restante do código.
+In small projects, it is common to scatter `os.Getenv` calls. As projects grow, this becomes technical debt: dependencies become implicit and hard to track.
+
+Centralizing configuration creates a “single source of truth”: validation and typing at startup, and simple consumption throughout the rest of the codebase.
 
 ```go
 package config
@@ -1506,8 +1503,6 @@ func Load() *Config {
 		Port:          getEnv("PORT", "8080"),
 		AWSRegion:     getEnv("AWS_REGION", "us-east-1"),
 		
-		// Converte o valor uma única vez para time.Duration,
-		// evitando cálculos repetidos no restante da aplicação.
 		UploadTimeout: time.Duration(getEnvAsInt("UPLOAD_TIMEOUT_SECONDS", 30)) * time.Second,
 		Env:           getEnv("APP_ENV", "development"),
 	}
@@ -1529,9 +1524,9 @@ func getEnvAsInt(key string, defaultValue int) int {
 }
 ```
 
-## Erros Semânticos
+# Semantic Errors
 
-O Service não deve retornar códigos HTTP. Ele deve retornar **erros que façam sentido no domínio**, e o Handler decide o status adequado. Isso mantém o domínio reutilizável (HTTP hoje, gRPC amanhã, CLI depois).
+The Service should not return HTTP status codes. It should return **errors that make sense within the domain**, and the Handler decides the appropriate status. This keeps the domain reusable (HTTP today, gRPC tomorrow, CLI later).
 
 ```go
 package upload
@@ -1547,17 +1542,17 @@ var (
 )
 ```
 
-### Destaques técnicos nos Erros
+### Technical Highlights in Error Handling
 
-- **Domínio agnóstico**: erros continuam fazendo sentido fora do HTTP.
-- **Comparação robusta com `errors.Is`**: mais seguro do que comparar strings.
-- **Consistência**: mensagens estáveis e previsíveis para quem consome a API.
+- **Domain-agnostic design**: errors remain meaningful outside of HTTP.
+- **Robust comparison with `errors.Is`**: safer than comparing strings.
+- **Consistency**: stable and predictable messages for API consumers.
 
-## Containerização com Docker
+## Containerization with Docker
 
-Containerizar garante que a API rode da mesma forma em qualquer ambiente. Aqui eu uso **multi-stage build**: compilo em uma imagem com toolchain e rodo em uma imagem final menor e mais segura.
+Containerization ensures that the API runs the same way in any environment. Here I use a **multi-stage build**: compilation happens in an image with the toolchain, and the final runtime image is smaller and more secure.
 
-### Dockerfile otimizado
+### Optimized Dockerfile
 
 ```yaml
 services:
@@ -1570,9 +1565,9 @@ services:
     restart: always
 ```
 
-### Orquestração com Docker Compose
+### Orchestration with Docker Compose
 
-O `docker-compose.yml` simplifica a inicialização da aplicação, gerenciando as portas e carregando automaticamente o nosso arquivo de segredos (`.env`).
+The `docker-compose.yml` file simplifies application startup by managing ports and automatically loading our secrets file (`.env`).
 
 ```dockerfile
 # Stage 1: Build the Go binary
@@ -1607,56 +1602,55 @@ EXPOSE 8080
 CMD ["./main"]
 ```
 
-### Destaques técnicos Docker
+### Technical Highlights in Docker
 
-- **Certificados SSL**: imagens mínimas nem sempre vêm com CA certs; sem isso, chamadas HTTPS podem falhar.
-- **Binário enxuto**: flags de build reduzem tamanho e aceleram deploy.
-- **Cache inteligente**: copiar `go.mod/go.sum` antes do código ajuda o Docker a reaproveitar layers.
+- **SSL certificates**: minimal images do not always include CA certificates; without them, HTTPS calls may fail.
+- **Slim binary**: build flags reduce size and speed up deployment.
+- **Smart caching**: copying `go.mod/go.sum` before the source code helps Docker reuse layers efficiently.
 
-## Comandos Úteis
+## Useful Commands
 
-Testes
+Tests
 ```bash
 go test ./...
 ```
 
-Executar o projeto
+Running the Project
 ```bash
 go run cmd/api/main.go
 ```
 
-Gestão do Container
-
+# Build the image and start the container in the background
 ```bash
-# Construir a imagem e subir o container em background
+# Build the image and start the container in the background
 docker-compose up --build -d
 
-# Visualizar logs da aplicação em tempo real
+# View application logs in real time
 docker logs -f go-s3-api
 
-# Derrubar o container
+# Stop and remove the container
 docker-compose down
 ```
 
-## Conclusão
+## Conclusion
 
-Construir esta API de gerenciamento para o Amazon S3 foi uma forma prática de unir uma necessidade real (automatizar meu workflow do blog) com aprendizado sólido (Go, AWS, segurança, observabilidade e arquitetura).
+Building this management API for Amazon S3 was a practical way to combine a real need (automating my blog workflow) with solid learning (Go, AWS, security, observability, and architecture).
 
-## Links do projeto
+## Project Links
 
-- [Repositório Principal no GitHub](https://github.com/JoaoOliveira889/GoS3Api): Este é o repositório “vivo”, que pode evoluir e ficar diferente do que está descrito neste artigo.
+- [Main GitHub Repository](https://github.com/JoaoOliveira889/GoS3Api): This is the “living” repository, which may evolve and differ from what is described in this article.
 
-- [Código Versão do Artigo](https://github.com/JoaoOliveira889/GoS3Api/releases/tag/v1.0.0): Para ver o projeto exatamente como foi construído e explicado aqui, com estado estático.
+- [Article Version Code](https://github.com/JoaoOliveira889/GoS3Api/releases/tag/v1.0.0): To see the project exactly as it was built and explained here, in a static state.
 
-## Referências
+## References
 
-- Go Standard Project Layout: https://github.com/golang-standards/project-layout
-- Clean Architecture (The Clean Code Blog): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- WS SDK for Go v2 - S3 Developer Guide: https://aws.github.io/aws-sdk-go-v2/docs/getting-started/
-- Go Concurrency Patterns (Context Package): https://go.dev/blog/context
-- Gin Web Framework: https://gin-gonic.com/docs/
-- Testify - Testing Toolkit: https://github.com/stretchr/testify
-- Google UUID Package (v7 support): https://github.com/google/uuid
-- Errgroup Package (Concorrência): https://pkg.go.dev/golang.org/x/sync/errgroup
-- Dockerizing a Go App: https://docs.docker.com/language/golang/build-images/
+- Go Standard Project Layout: https://github.com/golang-standards/project-layout  
+- Clean Architecture (The Clean Code Blog): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html  
+- AWS SDK for Go v2 – S3 Developer Guide: https://aws.github.io/aws-sdk-go-v2/docs/getting-started/  
+- Go Concurrency Patterns (Context Package): https://go.dev/blog/context  
+- Gin Web Framework: https://gin-gonic.com/docs/  
+- Testify – Testing Toolkit: https://github.com/stretchr/testify  
+- Google UUID Package (v7 support): https://github.com/google/uuid  
+- Errgroup Package (Concurrency): https://pkg.go.dev/golang.org/x/sync/errgroup  
+- Dockerizing a Go App: https://docs.docker.com/language/golang/build-images/  
 - GitHub Actions for Go: https://github.com/actions/setup-go

@@ -8,10 +8,9 @@ tags:
 - markdown
 - obsidian
 draft: false
-
 ---
 
-![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3f6-edb9-7263-ba31-4d0b9cc0ff88.webp)
+![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019bc1c8-320b-76b3-9d9c-a8ae2bfa7213.webp)
 
 ## Why did I decide to create my own blog?
 

@@ -1,6 +1,8 @@
-# João Oliveira — Blog (Hugo)
+# Joao Oliveira — Blog (Hugo)
 
-Personal blog built with **Hugo** and the **Hextra** theme.
+Live Site: [joaooliveira.net](https://joaooliveira.net)
+
+This repository contains the source code, configuration, and technical content for my personal blog. It is built using the Hugo static site generator and the Hextra theme, focusing on high performance, clean typography, and technical documentation style.
 
 ## Overview
 
@@ -45,4 +47,4 @@ Then edit the generated file under content/blog/... and run the local server to 
 
 ## License
 
-This is a personal repository. If you reuse any structure or content, please provide attribution.
+This is a personal repository. While the code structure is open for reference, the content (articles and images) belongs to João Oliveira. If you reuse any part of the structure, please provide attribution.

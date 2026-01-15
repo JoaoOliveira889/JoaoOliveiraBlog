@@ -11,7 +11,7 @@ tags:
 draft: false
 ---
 
-![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019ba3ea-88ec-711c-adbb-579c12050486.webp)
+![Article cover](https://joaooliveirablog.s3.us-east-1.amazonaws.com/019bc1c3-a76a-7e8f-b6dc-7605eb9cb63c.webp)
 
 Quando decidi criar meu próprio blog, eu já tinha em mente que precisaria ser responsável pela hospedagem das imagens que usaria. Seria uma ótima oportunidade de aprender mais sobre o **AWS S3**, algo que já estava no meu roadmap de estudos, e trabalhar em um projeto real é, quase sempre, a melhor forma de aprender.
 
