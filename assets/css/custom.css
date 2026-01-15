@@ -7,3 +7,45 @@
 .hextra-card:hover {
   transform: translateY(-1px);
 }
+
+/* footer */
+.custom-hextra-footer {
+    background-color: #f3f4f6; /* Light mode gray */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .dark .custom-hextra-footer {
+    background-color: #171717; /* Dark mode neutral-900 */
+  }
+  .custom-footer-hr {
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+    margin: 0;
+  }
+  .dark .custom-footer-hr {
+    border-top-color: #262626;
+  }
+.custom-footer-content {
+  margin: 0 auto;
+  max-width: 1280px;
+  padding: 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Reduced gap for a tighter look */
+  
+  /* These two lines center everything */
+  align-items: center; 
+  text-align: center;
+}
+  @media (min-width: 768px) {
+    .custom-footer-content { padding-left: 2rem; padding-right: 2rem; }
+  }
+  .footer-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  .dark .footer-text-group { color: #9ca3af; }
+  .custom-footer-link { text-decoration: underline; }
+  .custom-footer-link:hover { color: #1d4ed8; }

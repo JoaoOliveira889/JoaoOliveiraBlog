@@ -47,4 +47,9 @@ Then edit the generated file under content/blog/... and run the local server to 
 
 ## License
 
-This is a personal repository. While the code structure is open for reference, the content (articles and images) belongs to João Oliveira. If you reuse any part of the structure, please provide attribution.
+This project is open-source.
+
+- The **code and configuration** are licensed under the [MIT License](LICENSE).
+- The **articles and media content** are licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+If you reuse any part of this site, please provide attribution back to João Oliveira.
